@@ -1,0 +1,59 @@
+{
+  "app": "app_kf3crd1822g8",
+  "$comment": "Declarative SomnAI schema for Butterbase. Mirror of docs/butterbase-schema.sql and web/src/shared/types.ts. Apply via the Butterbase dashboard or /schema endpoint. Adjust type names to the Butterbase column-type vocabulary if it differs (it follows Postgres).",
+  "tables": {
+    "users": {
+      "columns": {
+        "id": { "type": "uuid", "primaryKey": true, "default": "gen_random_uuid()" },
+        "email": { "type": "text", "unique": true, "nullable": false },
+        "created_at": { "type": "timestamptz", "default": "now()" }
+      },
+      "rowLevelSecurity": { "owner": "id" }
+    },
+    "sleep_sessions": {
+      "columns": {
+        "id": { "type": "uuid", "primaryKey": true, "default": "gen_random_uuid()" },
+        "user_id": { "type": "uuid", "nullable": false, "references": "users.id" },
+        "date": { "type": "date", "nullable": false },
+        "start_ts": { "type": "timestamptz", "nullable": false },
+        "end_ts": { "type": "timestamptz", "nullable": false },
+        "sleep_score": { "type": "real", "nullable": false },
+        "audio_id": { "type": "text", "nullable": true },
+        "hypopnea_timestamps": { "type": "float8[]", "default": "{}" },
+        "obstructive_apnea_timestamps": { "type": "float8[]", "default": "{}" },
+        "snoring_timestamps": { "type": "float8[]", "default": "{}" },
+        "created_at": { "type": "timestamptz", "default": "now()" }
+      },
+      "indexes": [{ "columns": ["user_id", "start_ts"], "order": "desc" }],
+      "rowLevelSecurity": { "owner": "user_id" }
+    },
+    "stress_sessions": {
+      "columns": {
+        "id": { "type": "uuid", "primaryKey": true, "default": "gen_random_uuid()" },
+        "user_id": { "type": "uuid", "nullable": false, "references": "users.id" },
+        "date": { "type": "date", "nullable": false },
+        "start_ts": { "type": "timestamptz", "nullable": false },
+        "end_ts": { "type": "timestamptz", "nullable": false },
+        "stress_score": { "type": "real", "nullable": false },
+        "video_id": { "type": "text", "nullable": true },
+        "audio_id": { "type": "text", "nullable": true },
+        "stressed_timestamps": { "type": "float8[]", "default": "{}" },
+        "created_at": { "type": "timestamptz", "default": "now()" }
+      },
+      "indexes": [{ "columns": ["user_id", "start_ts"], "order": "desc" }],
+      "rowLevelSecurity": { "owner": "user_id" }
+    }
+  },
+  "buckets": {
+    "session-audio": {
+      "public": false,
+      "purpose": "Sleep and stress audio recordings. Cheaper store than the video bucket so the DB and video store stay lean.",
+      "access": "presigned-url"
+    },
+    "stress-video": {
+      "public": false,
+      "purpose": "Work-session video from the web app's camera.",
+      "access": "presigned-url"
+    }
+  }
+}
