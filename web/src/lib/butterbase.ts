@@ -24,8 +24,6 @@ function authHeaders(extra?: Record<string, string>): HeadersInit {
   return {
     'Content-Type': 'application/json',
     Accept: 'application/json',
-    // Supabase/PostgREST-style backends expect the key in BOTH headers.
-    apikey: token,
     Authorization: `Bearer ${token}`,
     ...extra,
   };
@@ -62,14 +60,14 @@ export async function getUser(email: string): Promise<UserRow | null> {
 }
 
 /** Create a new user row with a password hash. Returns the inserted row when
- *  the backend echoes it back (Prefer: return=representation). */
+ *  the backend echoes it back. */
 export async function createUser(
   email: string,
   passwordHash: string,
 ): Promise<UserRow | null> {
   const res = await send(tableUrl(butterbaseConfig.tables.users), {
     method: 'POST',
-    headers: authHeaders({ Prefer: 'return=representation' }),
+    headers: authHeaders(),
     body: JSON.stringify({
       id: crypto.randomUUID(),
       email,
@@ -90,7 +88,7 @@ export async function setUserPassword(email: string, passwordHash: string): Prom
   const query = `email=eq.${encodeURIComponent(email)}`;
   await send(tableUrl(butterbaseConfig.tables.users, query), {
     method: 'PATCH',
-    headers: authHeaders({ Prefer: 'return=minimal' }),
+    headers: authHeaders(),
     body: JSON.stringify({ password_hash: passwordHash }),
   });
 }
@@ -109,7 +107,7 @@ export async function fetchSleep(email: string): Promise<SleepRow[]> {
 export async function putSleep(row: SleepRow): Promise<void> {
   await send(tableUrl(butterbaseConfig.tables.sleep), {
     method: 'POST',
-    headers: authHeaders({ Prefer: 'return=minimal' }),
+    headers: authHeaders(),
     body: JSON.stringify(row),
   });
 }
@@ -128,7 +126,7 @@ export async function fetchStress(email: string): Promise<StressRow[]> {
 export async function putStress(row: StressRow): Promise<void> {
   await send(tableUrl(butterbaseConfig.tables.stress), {
     method: 'POST',
-    headers: authHeaders({ Prefer: 'return=minimal' }),
+    headers: authHeaders(),
     body: JSON.stringify(row),
   });
 }
