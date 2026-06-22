@@ -13,7 +13,7 @@ const SETTINGS_TOKEN_KEY = 'somnai.butterbase.token';
 
 export const butterbaseConfig = {
   baseUrl: (env.VITE_BUTTERBASE_URL ?? 'https://api.butterbase.ai').replace(/\/$/, ''),
-  appId: env.VITE_BUTTERBASE_APP_ID ?? 'app_kf3crd1822g8',
+  appId: env.VITE_BUTTERBASE_APP_ID ?? 'app_whop1jqjf6do',
   tables: {
     users: env.VITE_BB_USERS_TABLE ?? 'users',
     sleep: env.VITE_BB_SLEEP_TABLE ?? 'sleep',
