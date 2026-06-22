@@ -14,6 +14,14 @@ export interface User {
   email: string;
 }
 
+/** The Butterbase `users` row. `password_hash` is set by the web app's
+ *  password auth; the iOS app (email-only) leaves it null. */
+export interface UserRow {
+  id?: string;
+  email: string;
+  password_hash?: string | null;
+}
+
 export type SleepLabelKind =
   | 'snoring'
   | 'hypopnea'

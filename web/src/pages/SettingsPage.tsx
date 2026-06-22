@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { AppShell } from '../components/AppShell';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
-import { testConnection } from '../lib/butterbase';
+import { provisionSchema, testConnection } from '../lib/butterbase';
 import { CLAUDE_MODEL } from '../lib/claude';
 import { isButterbaseConfigured } from '../lib/config';
 
@@ -12,6 +12,7 @@ export function SettingsPage() {
   const [claudeDraft, setClaudeDraft] = useState(claudeKey);
   const [tokenDraft, setTokenDraft] = useState(butterbaseToken);
   const [testing, setTesting] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
 
   const live = isButterbaseConfigured();
@@ -23,6 +24,15 @@ export function SettingsPage() {
     const r = await testConnection();
     setTestResult(r.message);
     setTesting(false);
+  };
+
+  const createTables = async () => {
+    setButterbaseToken(tokenDraft);
+    setCreating(true);
+    setTestResult(null);
+    const r = await provisionSchema();
+    setTestResult(r.message);
+    setCreating(false);
   };
 
   return (
@@ -78,10 +88,18 @@ export function SettingsPage() {
           <button className="btn-full" onClick={() => setButterbaseToken(tokenDraft)}>
             Save token
           </button>
-          <button className="btn-prominent btn-full" onClick={runTest} disabled={testing}>
+          <button className="btn-prominent btn-full" onClick={runTest} disabled={testing || creating}>
             {testing ? 'Testing…' : 'Test connection'}
           </button>
         </div>
+        <button className="btn-sleep btn-full" onClick={createTables} disabled={creating || testing}>
+          {creating ? 'Creating tables…' : 'Create tables'}
+        </button>
+        <p className="muted" style={{ margin: 0, fontSize: 12 }}>
+          First time? Tap <strong>Create tables</strong> to provision <code>users</code>,{' '}
+          <code>sleep</code> and <code>stress</code> in your app (needs a <code>bb_sk_…</code> admin
+          key), then <strong>Test connection</strong>.
+        </p>
         {testResult && <p className="muted" style={{ margin: 0 }}>{testResult}</p>}
       </div>
     </AppShell>

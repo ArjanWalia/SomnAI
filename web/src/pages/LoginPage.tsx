@@ -2,13 +2,27 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 export function LoginPage() {
-  const { signIn, working, error } = useAuth();
+  const { signIn, signUp, working, error } = useAuth();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [localError, setLocalError] = useState<string | null>(null);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    void signIn(email);
+    setLocalError(null);
+    if (mode === 'signup' && password !== confirm) {
+      setLocalError('Passwords do not match.');
+      return;
+    }
+    if (mode === 'signup') void signUp(email, password);
+    else void signIn(email, password);
+  };
+
+  const switchMode = (next: 'signin' | 'signup') => {
+    setMode(next);
+    setLocalError(null);
   };
 
   return (
@@ -29,14 +43,14 @@ export function LoginPage() {
           <div className="btn-row">
             <button
               className={mode === 'signin' ? 'btn-prominent btn-full' : 'btn-full'}
-              onClick={() => setMode('signin')}
+              onClick={() => switchMode('signin')}
               type="button"
             >
               Sign In
             </button>
             <button
               className={mode === 'signup' ? 'btn-prominent btn-full' : 'btn-full'}
-              onClick={() => setMode('signup')}
+              onClick={() => switchMode('signup')}
               type="button"
             >
               Sign Up
@@ -51,18 +65,43 @@ export function LoginPage() {
                 type="email"
                 autoCapitalize="none"
                 autoCorrect="off"
+                autoComplete="email"
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            {error && <p className="error-text">{error}</p>}
+            <div className="field">
+              <label htmlFor="password">Password</label>
+              <input
+                id="password"
+                type="password"
+                autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+                placeholder="At least 6 characters"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            {mode === 'signup' && (
+              <div className="field">
+                <label htmlFor="confirm">Confirm password</label>
+                <input
+                  id="confirm"
+                  type="password"
+                  autoComplete="new-password"
+                  placeholder="Re-enter your password"
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                />
+              </div>
+            )}
+            {(localError || error) && <p className="error-text">{localError ?? error}</p>}
             <button className="btn-prominent btn-full" type="submit" disabled={working}>
               {working ? <span className="spinner" /> : mode === 'signin' ? 'Sign In' : 'Create account'}
             </button>
           </form>
           <p className="muted center" style={{ fontSize: 13, margin: 0 }}>
-            Your email is stored with Butterbase and ties this account to your iPhone app.
+            Your email + password sign you in; the email ties this account to your iPhone app.
           </p>
         </div>
       </main>

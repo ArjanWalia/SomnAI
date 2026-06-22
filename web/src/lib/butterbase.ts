@@ -11,7 +11,7 @@
  */
 
 import { butterbaseConfig, getButterbaseToken } from './config';
-import type { SleepRow, StressRow } from '../shared/types';
+import type { SleepRow, StressRow, UserRow } from '../shared/types';
 
 function tableUrl(table: string, query?: string): string {
   const base = `${butterbaseConfig.baseUrl}/v1/${butterbaseConfig.appId}/${table}`;
@@ -45,6 +45,40 @@ export async function upsertUser(email: string): Promise<void> {
     method: 'POST',
     headers: authHeaders(),
     body: JSON.stringify({ email }),
+  });
+}
+
+/** Look up a single user row by email, or null if none exists. */
+export async function getUser(email: string): Promise<UserRow | null> {
+  const query = `email=eq.${encodeURIComponent(email)}&limit=1`;
+  const res = await send(tableUrl(butterbaseConfig.tables.users, query), {
+    method: 'GET',
+    headers: authHeaders(),
+  });
+  const rows = (await res.json()) as UserRow[];
+  return Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+}
+
+/** Create a new user row with a password hash. */
+export async function createUser(email: string, passwordHash: string): Promise<void> {
+  await send(tableUrl(butterbaseConfig.tables.users), {
+    method: 'POST',
+    headers: authHeaders({ Prefer: 'return=minimal' }),
+    body: JSON.stringify({
+      id: crypto.randomUUID(),
+      email,
+      password_hash: passwordHash,
+    }),
+  });
+}
+
+/** Set/replace the password hash on an existing user row. */
+export async function setUserPassword(email: string, passwordHash: string): Promise<void> {
+  const query = `email=eq.${encodeURIComponent(email)}`;
+  await send(tableUrl(butterbaseConfig.tables.users, query), {
+    method: 'PATCH',
+    headers: authHeaders({ Prefer: 'return=minimal' }),
+    body: JSON.stringify({ password_hash: passwordHash }),
   });
 }
 
@@ -151,7 +185,85 @@ export async function testConnection(): Promise<{
   if (missing.length)
     return {
       ok: false,
-      message: `Token works, but these tables are missing: ${missing.join(', ')}. Create them in the Butterbase dashboard.`,
+      message: `Token works, but these tables are missing: ${missing.join(
+        ', ',
+      )}. Tap "Create tables" to provision them.`,
     };
   return { ok: true, message: 'Connected. users, sleep and stress are reachable.' };
+}
+
+/**
+ * Create the users / sleep / stress tables if they don't exist, mirroring the
+ * iOS app's POST /v1/{app}/schema/apply. Requires a service key (bb_sk_…) with
+ * admin permissions. The column shapes match SomnAI/ButterbaseClient.swift so
+ * both clients share the same rows; `users.password_hash` is the web-only
+ * addition that powers password sign-in.
+ */
+export async function provisionSchema(): Promise<{ ok: boolean; message: string }> {
+  if (!getButterbaseToken()) {
+    return { ok: false, message: 'No token set. Paste your Butterbase token and save first.' };
+  }
+  const body = {
+    name: 'SomnAI bootstrap',
+    schema: {
+      tables: {
+        [butterbaseConfig.tables.users]: {
+          primary_key: ['id'],
+          columns: {
+            id: { type: 'text' },
+            email: { type: 'text', nullable: false },
+            password_hash: { type: 'text', nullable: true },
+            created_at: { type: 'timestamptz', default: 'now()' },
+          },
+        },
+        [butterbaseConfig.tables.sleep]: {
+          primary_key: ['id'],
+          columns: {
+            id: { type: 'text' },
+            email: { type: 'text', nullable: false },
+            date: { type: 'text' },
+            start_timestamp: { type: 'timestamptz' },
+            end_timestamp: { type: 'timestamptz' },
+            sleep_score: { type: 'numeric' },
+            audio_id: { type: 'text', nullable: true },
+            hypopnea_timestamps: { type: 'jsonb' },
+            obstructive_timestamps: { type: 'jsonb' },
+            snoring_timestamps: { type: 'jsonb' },
+          },
+        },
+        [butterbaseConfig.tables.stress]: {
+          primary_key: ['id'],
+          columns: {
+            id: { type: 'text' },
+            email: { type: 'text', nullable: false },
+            date: { type: 'text' },
+            start_timestamp: { type: 'timestamptz' },
+            end_timestamp: { type: 'timestamptz' },
+            stress_score: { type: 'numeric' },
+            video_id: { type: 'text', nullable: true },
+            audio_id: { type: 'text', nullable: true },
+            stressed_timestamps: { type: 'jsonb' },
+          },
+        },
+      },
+    },
+  };
+  try {
+    const endpoint = `${butterbaseConfig.baseUrl}/v1/${butterbaseConfig.appId}/schema/apply`;
+    await send(endpoint, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify(body),
+    });
+    return { ok: true, message: 'Schema applied. users, sleep and stress tables are ready.' };
+  } catch (e) {
+    const msg = String(e);
+    if (msg.includes('401') || msg.includes('403')) {
+      return {
+        ok: false,
+        message: 'Token rejected. Use a service key (bb_sk_…) with admin permissions to apply schema.',
+      };
+    }
+    return { ok: false, message: `Schema apply failed: ${msg}` };
+  }
 }

@@ -8,9 +8,14 @@ means agreeing on (1) the table shapes and (2) the scoring algorithms below. The
 
 ## Identity
 
-- **users**: `id`, `email`, `created_at`. The email is the cross-client
-  identity — every sleep/stress row carries the owner's `email`. Sign-in upserts
-  the email (`POST /v1/{app}/users`).
+- **users**: `id`, `email`, `password_hash`, `created_at`. The email is the
+  cross-client identity — every sleep/stress row carries the owner's `email`.
+  The web app adds password auth: `password_hash` is a SHA-256 digest salted
+  with the email (`web/src/lib/crypto.ts`); plaintext passwords never leave the
+  browser. The iPhone app (email-only) leaves `password_hash` null, and a
+  phone-created account can be claimed by signing up on the web. The web client
+  can provision all three tables via `POST /v1/{app}/schema/apply`
+  (Settings → Create tables), mirroring the iOS bootstrap.
 
 ## Tables
 

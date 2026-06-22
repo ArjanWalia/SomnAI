@@ -1,6 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* SomnAI web theme — mirrors SomnAI/Theme.swift:
    dark mode, purple accent, blue sleep, coral stress, orange Claude,
-   animated mesh-gradient backgrounds, glass cards, animated score rings. */
+   animated mesh-gradient backgrounds, glass cards, animated score rings.
+   The design-system classes below are built with Tailwind's @apply plus a few
+   custom gradients/animations Tailwind can't express. */
 
 :root {
   --accent: #9e80ff;
@@ -13,28 +19,35 @@
   --text-dim: rgba(244, 243, 251, 0.62);
   --text-faint: rgba(244, 243, 251, 0.4);
   --glass: rgba(255, 255, 255, 0.06);
-  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-strong: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.14);
   --radius: 20px;
   --nav-h: 68px;
 }
 
-* {
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
-}
+@layer base {
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
 
-html,
-body,
-#root {
-  height: 100%;
-  margin: 0;
-}
+  /* Use min-height (not fixed height) and allow vertical scroll so tall pages
+     are never clipped. */
+  html,
+  body,
+  #root {
+    min-height: 100%;
+    margin: 0;
+  }
 
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  -webkit-font-smoothing: antialiased;
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
 }
 
 .mono {
@@ -51,7 +64,9 @@ body {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  /* Only clip horizontally so the aurora can't add a sideways scrollbar; never
+     clip vertically (that was cutting off long pages). */
+  overflow-x: hidden;
 }
 
 .aurora {
@@ -69,7 +84,7 @@ body {
   background: radial-gradient(40% 40% at 30% 25%, rgba(110, 80, 220, 0.55), transparent 70%),
     radial-gradient(45% 45% at 75% 30%, rgba(60, 90, 200, 0.5), transparent 70%),
     radial-gradient(50% 50% at 50% 85%, rgba(150, 70, 130, 0.4), transparent 70%);
-  filter: blur(20px);
+  filter: blur(22px);
   animation: drift 18s ease-in-out infinite alternate;
 }
 .aurora.stress::before,
@@ -109,9 +124,7 @@ body {
 /* --- Header --- */
 
 .header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  @apply flex items-center justify-between;
   padding: 18px 20px 8px;
 }
 .header h1 {
@@ -127,28 +140,30 @@ body {
 /* --- Content area --- */
 
 .content {
-  flex: 1;
-  padding: 8px 20px calc(var(--nav-h) + 28px);
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  @apply flex flex-1 flex-col gap-4;
+  padding: 8px 20px;
+  /* Reserve room for the fixed bottom nav + the device safe area so the last
+     card is always fully visible. */
+  padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 28px);
 }
 
 /* --- Glass card --- */
 
 .card {
-  background: var(--glass);
+  position: relative;
+  background: linear-gradient(160deg, var(--glass-strong), var(--glass));
   border: 1px solid var(--glass-border);
   border-radius: var(--radius);
   padding: 16px;
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 12px 34px -16px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 .card.tint-sleep {
-  background: rgba(115, 153, 255, 0.12);
+  background: linear-gradient(160deg, rgba(115, 153, 255, 0.2), rgba(115, 153, 255, 0.08));
 }
 .card.tint-stress {
-  background: rgba(255, 140, 128, 0.12);
+  background: linear-gradient(160deg, rgba(255, 140, 128, 0.2), rgba(255, 140, 128, 0.08));
 }
 .card-title {
   font-size: 13px;
@@ -161,14 +176,10 @@ body {
 /* --- Score orbs row --- */
 
 .orbs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  @apply grid grid-cols-2 gap-4;
 }
 .orb {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  @apply flex flex-col items-center;
   gap: 6px;
 }
 .orb .label {
@@ -184,12 +195,7 @@ body {
   transform: rotate(-90deg);
 }
 .ring .value {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  @apply absolute inset-0 flex flex-col items-center justify-center;
 }
 .ring .value .num {
   font-size: 34px;
@@ -207,72 +213,101 @@ body {
   font-size: 27px;
 }
 
-/* --- Buttons --- */
+/* --- Buttons: glass by default, tinted glass for emphasis --- */
 
 button,
 .btn {
+  position: relative;
   font: inherit;
+  font-weight: 500;
   cursor: pointer;
-  border: none;
   border-radius: 14px;
   padding: 12px 18px;
   color: var(--text);
-  background: var(--glass);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.05));
   border: 1px solid var(--glass-border);
-  transition: transform 0.08s ease, opacity 0.2s ease;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 8px 20px -12px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition: transform 0.12s ease, box-shadow 0.2s ease, filter 0.2s ease, opacity 0.2s ease;
+  overflow: hidden;
 }
-button:active,
+/* Soft top sheen for the glass look. */
+button::before,
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 50%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent);
+  pointer-events: none;
+}
+button:hover:not(:disabled),
+.btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow: 0 14px 28px -14px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+button:active:not(:disabled),
 .btn:active {
-  transform: scale(0.97);
+  transform: translateY(0) scale(0.98);
 }
 button:disabled {
   opacity: 0.5;
   cursor: default;
 }
+
+/* Tinted glass variants — translucent fill + colored glow, not flat solids. */
 .btn-prominent {
   font-weight: 600;
-  border: none;
-  background: var(--accent);
-  color: #150f2e;
+  color: #f4f1ff;
+  border-color: rgba(158, 128, 255, 0.5);
+  background: linear-gradient(160deg, rgba(158, 128, 255, 0.85), rgba(158, 128, 255, 0.45));
+  box-shadow: 0 10px 26px -10px rgba(158, 128, 255, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 .btn-sleep {
-  background: var(--sleep);
-  color: #0c1330;
+  color: #eaf0ff;
+  border-color: rgba(115, 153, 255, 0.5);
+  background: linear-gradient(160deg, rgba(115, 153, 255, 0.85), rgba(115, 153, 255, 0.45));
+  box-shadow: 0 10px 26px -10px rgba(115, 153, 255, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 .btn-stress {
-  background: var(--stress);
-  color: #2c0d0a;
+  color: #fff0ee;
+  border-color: rgba(255, 140, 128, 0.5);
+  background: linear-gradient(160deg, rgba(255, 140, 128, 0.85), rgba(255, 140, 128, 0.45));
+  box-shadow: 0 10px 26px -10px rgba(255, 140, 128, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 .btn-danger {
-  background: #f5564a;
   color: #fff;
+  border-color: rgba(245, 86, 74, 0.55);
+  background: linear-gradient(160deg, rgba(245, 86, 74, 0.9), rgba(245, 86, 74, 0.5));
+  box-shadow: 0 10px 26px -10px rgba(245, 86, 74, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 .btn-full {
-  width: 100%;
-  text-align: center;
+  @apply w-full text-center;
 }
 .btn-row {
-  display: flex;
-  gap: 10px;
+  @apply flex gap-2.5;
 }
 
 /* --- Session list + cards --- */
 
 .session-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  @apply flex items-center justify-between gap-3 no-underline;
   padding: 14px 16px;
   border-radius: 16px;
-  background: var(--glass);
+  background: linear-gradient(160deg, var(--glass-strong), var(--glass));
   border: 1px solid var(--glass-border);
-  text-decoration: none;
   color: inherit;
+  box-shadow: 0 8px 22px -16px rgba(0, 0, 0, 0.7);
+  transition: transform 0.12s ease, border-color 0.2s ease;
+}
+.session-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.24);
 }
 .session-card .when {
-  display: flex;
-  flex-direction: column;
+  @apply flex flex-col;
   gap: 2px;
 }
 .session-card .when .date {
@@ -299,8 +334,7 @@ button:disabled {
 /* --- Forms --- */
 
 .field {
-  display: flex;
-  flex-direction: column;
+  @apply flex flex-col;
   gap: 6px;
   margin-bottom: 14px;
 }
@@ -312,15 +346,18 @@ input[type='text'],
 input[type='email'],
 input[type='password'] {
   font: inherit;
+  width: 100%;
   color: var(--text);
-  background: rgba(0, 0, 0, 0.25);
+  background: rgba(0, 0, 0, 0.28);
   border: 1px solid var(--glass-border);
   border-radius: 12px;
   padding: 12px 14px;
   outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 input:focus {
   border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(158, 128, 255, 0.25);
 }
 
 /* --- Bottom nav --- */
@@ -332,25 +369,22 @@ input:focus {
   transform: translateX(-50%);
   width: 100%;
   max-width: 540px;
-  height: var(--nav-h);
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
+  min-height: var(--nav-h);
+  @apply flex items-center justify-around;
   padding-bottom: env(safe-area-inset-bottom);
   background: rgba(10, 9, 22, 0.72);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--glass-border);
+  z-index: 10;
 }
 .bottom-nav a {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  @apply flex flex-col items-center no-underline;
   gap: 3px;
   font-size: 11px;
-  text-decoration: none;
   color: var(--text-faint);
   padding: 6px 14px;
+  transition: color 0.2s ease;
 }
 .bottom-nav a.active {
   color: var(--accent);
@@ -369,16 +403,14 @@ input:focus {
   text-align: center;
 }
 .row {
-  display: flex;
-  align-items: center;
+  @apply flex items-center;
   gap: 10px;
 }
 .spread {
-  justify-content: space-between;
+  @apply justify-between;
 }
 .stack {
-  display: flex;
-  flex-direction: column;
+  @apply flex flex-col;
   gap: 12px;
 }
 .big-score {
@@ -387,13 +419,14 @@ input:focus {
   line-height: 1;
 }
 .pill {
-  display: inline-flex;
-  align-items: center;
+  @apply inline-flex items-center no-underline;
   gap: 6px;
   padding: 6px 12px;
   border-radius: 999px;
   font-size: 12px;
+  color: var(--text);
   background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--glass-border);
 }
 .pill.live {
   background: rgba(95, 214, 160, 0.18);
@@ -409,8 +442,9 @@ input:focus {
   height: 22px;
   border-radius: 50%;
   border: 2.5px solid rgba(255, 255, 255, 0.2);
-  border-top-color: var(--accent);
+  border-top-color: #fff;
   animation: spin 0.8s linear infinite;
+  margin: 0 auto;
 }
 @keyframes spin {
   to {
@@ -421,6 +455,12 @@ input:focus {
 .error-text {
   color: #ff9a8f;
   font-size: 14px;
+  margin: 0 0 10px;
+}
+.ok-text {
+  color: #8fe9bd;
+  font-size: 14px;
+  margin: 0;
 }
 
 /* --- Recording view --- */
@@ -431,6 +471,7 @@ input:focus {
   overflow: hidden;
   background: #000;
   aspect-ratio: 4 / 3;
+  width: 100%;
 }
 .recorder-stage video {
   width: 100%;
@@ -442,8 +483,7 @@ input:focus {
   position: absolute;
   top: 12px;
   left: 12px;
-  display: flex;
-  align-items: center;
+  @apply flex items-center;
   gap: 7px;
   background: rgba(0, 0, 0, 0.5);
   padding: 6px 12px;
@@ -464,17 +504,15 @@ input:focus {
   }
 }
 .signal-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  @apply grid grid-cols-2;
   gap: 8px 16px;
 }
 .signal {
-  display: flex;
-  flex-direction: column;
+  @apply flex flex-col;
   gap: 4px;
 }
 .signal .row {
-  justify-content: space-between;
+  @apply justify-between;
   font-size: 13px;
 }
 .bar {
@@ -515,8 +553,7 @@ input:focus {
   background: #fff;
 }
 .chips {
-  display: flex;
-  flex-wrap: wrap;
+  @apply flex flex-wrap;
   gap: 8px;
 }
 .chip {
@@ -532,8 +569,7 @@ input:focus {
 }
 
 .player {
-  display: flex;
-  align-items: center;
+  @apply flex items-center;
   gap: 12px;
 }
 .player input[type='range'] {
@@ -544,9 +580,7 @@ input:focus {
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  @apply flex items-center justify-center;
   font-size: 20px;
   flex: none;
 }

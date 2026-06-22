@@ -13,15 +13,18 @@ import {
   type ReactNode,
 } from 'react';
 import { backend } from '../lib/db';
+import { hashPassword } from '../lib/crypto';
 
 const EMAIL_KEY = 'somnai.user.email';
+const MIN_PASSWORD = 6;
 
 interface AuthValue {
   email: string | null;
   isSignedIn: boolean;
   working: boolean;
   error: string | null;
-  signIn: (email: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<void>;
   signOut: () => void;
 }
 
@@ -38,28 +41,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [working, setWorking] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const signIn = useCallback(async (raw: string) => {
-    const value = raw.trim().toLowerCase();
-    if (!isValidEmail(value)) {
-      setError('Enter a valid email address.');
-      return;
-    }
-    setWorking(true);
-    setError(null);
-    try {
-      await backend().signIn(value);
-      localStorage.setItem(EMAIL_KEY, value);
-      setEmail(value);
-    } catch (e) {
-      // Best-effort: keep the user signed in locally even if the network failed,
-      // matching the iOS behavior.
-      localStorage.setItem(EMAIL_KEY, value);
-      setEmail(value);
-      setError(`Signed in, but sync failed: ${String(e)}`);
-    } finally {
-      setWorking(false);
-    }
-  }, []);
+  const authenticate = useCallback(
+    async (raw: string, password: string, mode: 'signin' | 'signup') => {
+      const value = raw.trim().toLowerCase();
+      if (!isValidEmail(value)) {
+        setError('Enter a valid email address.');
+        return;
+      }
+      if (password.length < MIN_PASSWORD) {
+        setError(`Password must be at least ${MIN_PASSWORD} characters.`);
+        return;
+      }
+      setWorking(true);
+      setError(null);
+      try {
+        const hash = await hashPassword(value, password);
+        if (mode === 'signup') await backend().signUp(value, hash);
+        else await backend().signIn(value, hash);
+        localStorage.setItem(EMAIL_KEY, value);
+        setEmail(value);
+      } catch (e) {
+        // Surface the credential/sync error and stay on the login screen.
+        setError(String(e instanceof Error ? e.message : e));
+      } finally {
+        setWorking(false);
+      }
+    },
+    [],
+  );
+
+  const signIn = useCallback(
+    (email: string, password: string) => authenticate(email, password, 'signin'),
+    [authenticate],
+  );
+  const signUp = useCallback(
+    (email: string, password: string) => authenticate(email, password, 'signup'),
+    [authenticate],
+  );
 
   const signOut = useCallback(() => {
     localStorage.removeItem(EMAIL_KEY);
@@ -74,9 +92,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       working,
       error,
       signIn,
+      signUp,
       signOut,
     }),
-    [email, working, error, signIn, signOut],
+    [email, working, error, signIn, signUp, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

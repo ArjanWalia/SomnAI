@@ -20,7 +20,10 @@ import type {
 
 export interface Backend {
   readonly live: boolean;
-  signIn(email: string): Promise<void>;
+  /** Create an account with a password hash. Throws if it already exists. */
+  signUp(email: string, passwordHash: string): Promise<void>;
+  /** Verify credentials. Throws on unknown email or wrong password. */
+  signIn(email: string, passwordHash: string): Promise<void>;
   listSleep(email: string): Promise<SleepSession[]>;
   listStress(email: string): Promise<StressSession[]>;
   saveStress(
@@ -75,8 +78,25 @@ function stressToRow(email: string, s: StressSession): StressRow {
 
 const butterbaseBackend: Backend = {
   live: true,
-  async signIn(email) {
-    await bb.upsertUser(email);
+  async signUp(email, passwordHash) {
+    const existing = await bb.getUser(email);
+    if (existing?.password_hash) {
+      throw new Error('An account with this email already exists. Sign in instead.');
+    }
+    if (existing) {
+      // Row created by the iPhone app (email only) — claim it with a password.
+      await bb.setUserPassword(email, passwordHash);
+    } else {
+      await bb.createUser(email, passwordHash);
+    }
+  },
+  async signIn(email, passwordHash) {
+    const user = await bb.getUser(email);
+    if (!user) throw new Error('No account found for that email. Sign up first.');
+    if (!user.password_hash) {
+      throw new Error('No password set for this account yet. Use Sign Up to set one.');
+    }
+    if (user.password_hash !== passwordHash) throw new Error('Incorrect password.');
   },
   async listSleep(email) {
     return (await bb.fetchSleep(email)).map(sleepFromRow);
@@ -102,6 +122,21 @@ const butterbaseBackend: Backend = {
 const SLEEP_KEY = (email: string) => `somnai.local.sleep.${email}`;
 const STRESS_KEY = (email: string) => `somnai.local.stress.${email}`;
 const SEEDED_KEY = (email: string) => `somnai.local.seeded.${email}`;
+const AUTH_KEY = 'somnai.local.auth';
+
+function readAuth(): Record<string, string> {
+  return readJson<Record<string, string>>(AUTH_KEY, {});
+}
+
+/** Seed a week of demo data the first time an account is used. */
+function ensureSeeded(email: string): void {
+  if (!localStorage.getItem(SEEDED_KEY(email))) {
+    const { sleep, stress } = seedFor(email);
+    writeJson(SLEEP_KEY(email), sleep);
+    writeJson(STRESS_KEY(email), stress);
+    localStorage.setItem(SEEDED_KEY(email), '1');
+  }
+}
 
 function readJson<T>(key: string, fallback: T): T {
   try {
@@ -118,13 +153,19 @@ function writeJson(key: string, value: unknown): void {
 
 const localBackend: Backend = {
   live: false,
-  async signIn(email) {
-    if (!localStorage.getItem(SEEDED_KEY(email))) {
-      const { sleep, stress } = seedFor(email);
-      writeJson(SLEEP_KEY(email), sleep);
-      writeJson(STRESS_KEY(email), stress);
-      localStorage.setItem(SEEDED_KEY(email), '1');
-    }
+  async signUp(email, passwordHash) {
+    const auth = readAuth();
+    if (auth[email]) throw new Error('An account with this email already exists. Sign in instead.');
+    auth[email] = passwordHash;
+    writeJson(AUTH_KEY, auth);
+    ensureSeeded(email);
+  },
+  async signIn(email, passwordHash) {
+    const auth = readAuth();
+    const stored = auth[email];
+    if (!stored) throw new Error('No account found for that email. Sign up first.');
+    if (stored !== passwordHash) throw new Error('Incorrect password.');
+    ensureSeeded(email);
   },
   async listSleep(email) {
     return readJson<SleepSession[]>(SLEEP_KEY(email), []);
