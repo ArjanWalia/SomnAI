@@ -1,13 +1,24 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useSettings } from '../context/SettingsContext';
+import { isButterbaseConfigured } from '../lib/config';
 
 export function LoginPage() {
   const { signIn, signUp, working, error } = useAuth();
+  const { butterbaseToken, setButterbaseToken } = useSettings();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
+  const [tokenDraft, setTokenDraft] = useState(butterbaseToken);
+  const [tokenSaved, setTokenSaved] = useState(false);
+  const live = isButterbaseConfigured();
+
+  const saveToken = () => {
+    setButterbaseToken(tokenDraft);
+    setTokenSaved(true);
+  };
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,6 +115,34 @@ export function LoginPage() {
             Your email + password sign you in; the email ties this account to your iPhone app.
           </p>
         </div>
+
+        <details className="card stack" open={!live}>
+          <summary style={{ cursor: 'pointer', listStyle: 'none' }}>
+            <span className={`pill ${live ? 'live' : 'demo'}`}>
+              {live ? '● Live Butterbase sync' : '○ Demo mode (local only)'}
+            </span>
+          </summary>
+          <p className="muted" style={{ margin: '12px 0 0', fontSize: 13 }}>
+            Paste your <code>bb_sk_…</code> service key to store your account in
+            Butterbase and sync with the iPhone app. Without it, accounts are kept
+            only in this browser.
+          </p>
+          <div className="field" style={{ marginBottom: 0 }}>
+            <input
+              type="password"
+              autoComplete="off"
+              placeholder="bb_sk_… or user JWT"
+              value={tokenDraft}
+              onChange={(e) => {
+                setTokenDraft(e.target.value);
+                setTokenSaved(false);
+              }}
+            />
+          </div>
+          <button className="btn-full" type="button" onClick={saveToken}>
+            {tokenSaved ? 'Saved ✓' : 'Save & connect'}
+          </button>
+        </details>
       </main>
     </div>
   );

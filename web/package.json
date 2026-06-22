@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.69.0",
+    "@huggingface/transformers": "^3.0.2",
     "@mediapipe/tasks-vision": "^0.10.18",
     "@tensorflow/tfjs": "^4.22.0",
     "react": "^18.3.1",

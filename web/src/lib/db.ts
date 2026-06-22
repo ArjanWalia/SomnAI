@@ -89,6 +89,15 @@ const butterbaseBackend: Backend = {
     } else {
       await bb.createUser(email, passwordHash);
     }
+    // Read back so a silent no-op write (wrong table/permissions) surfaces as a
+    // real error instead of a false "account created".
+    const check = await bb.getUser(email);
+    if (!check) {
+      throw new Error(
+        'Sign-up did not persist to Butterbase. Make sure the tables exist ' +
+          '(Settings → Create tables) and your token has write access.',
+      );
+    }
   },
   async signIn(email, passwordHash) {
     const user = await bb.getUser(email);

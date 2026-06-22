@@ -1,10 +1,12 @@
 import { NavLink } from 'react-router-dom';
 
+// Mirrors the iOS TabView (ContentView.swift): Home / Stress / Sleep, with
+// Settings reachable from the same bar.
 const tabs = [
-  { to: '/', glyph: '◎', label: 'Home', end: true },
+  { to: '/', glyph: '🏠', label: 'Home', end: true },
   { to: '/stress', glyph: '🧠', label: 'Stress', end: false },
   { to: '/sleep', glyph: '🌙', label: 'Sleep', end: false },
-  { to: '/settings', glyph: '⚙', label: 'Settings', end: false },
+  { to: '/settings', glyph: '⚙️', label: 'Settings', end: false },
 ];
 
 export function BottomNav() {

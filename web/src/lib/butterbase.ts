@@ -24,6 +24,8 @@ function authHeaders(extra?: Record<string, string>): HeadersInit {
   return {
     'Content-Type': 'application/json',
     Accept: 'application/json',
+    // Supabase/PostgREST-style backends expect the key in BOTH headers.
+    apikey: token,
     Authorization: `Bearer ${token}`,
     ...extra,
   };
@@ -59,17 +61,28 @@ export async function getUser(email: string): Promise<UserRow | null> {
   return Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
 }
 
-/** Create a new user row with a password hash. */
-export async function createUser(email: string, passwordHash: string): Promise<void> {
-  await send(tableUrl(butterbaseConfig.tables.users), {
+/** Create a new user row with a password hash. Returns the inserted row when
+ *  the backend echoes it back (Prefer: return=representation). */
+export async function createUser(
+  email: string,
+  passwordHash: string,
+): Promise<UserRow | null> {
+  const res = await send(tableUrl(butterbaseConfig.tables.users), {
     method: 'POST',
-    headers: authHeaders({ Prefer: 'return=minimal' }),
+    headers: authHeaders({ Prefer: 'return=representation' }),
     body: JSON.stringify({
       id: crypto.randomUUID(),
       email,
       password_hash: passwordHash,
     }),
   });
+  try {
+    const json = await res.json();
+    const row = Array.isArray(json) ? json[0] : json;
+    return (row ?? null) as UserRow | null;
+  } catch {
+    return null;
+  }
 }
 
 /** Set/replace the password hash on an existing user row. */

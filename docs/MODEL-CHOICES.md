@@ -23,19 +23,27 @@ map negative affect → stress.
 
 ## Video model — `web/src/lib/videoModel.ts`
 
-Heavy nets (ResNet-50 / 3D-CNN) can't run live in a browser, so we realize the
-*image + motion* modalities with **MediaPipe Face Landmarker** (468 landmarks +
-52 ARKit blendshapes, WebGL):
+The face-analysis backbone is **Microsoft ResNet-50**
+(https://huggingface.co/microsoft/resnet-50) — the exact ImageNet-1k ResNet-50
+the MIST paper uses for its image modality. The official checkpoint is PyTorch,
+which can't run on the web, so we load the **ONNX export of those same weights**
+(`Xenova/resnet-50`) with **transformers.js** and run it fully on-device.
 
-- **Expression (image)** — blendshapes → brow tension, eye squint, frown, cringe
-  (the negative-affect cues the FER paper ties to stress).
-- **Pixel heuristics** — forehead specular highlights → *sweat*; R/(G+B) in the
-  eye band → *eye-redness*.
-- **Motion** — head-pose yaw oscillation (*head shake*) and face loss
-  (*head-in-hands*) as frustration cues — the paper's temporal/motion stream.
+Each sample we crop the face and push it through ResNet-50; the Euclidean
+distance between consecutive class-probability vectors is a continuous
+**facial-activity / movement** signal — the paper's temporal/motion stream,
+realized over real ResNet-50 features.
 
-`tension = weighted sum`; `calmness = 1 − tension`. If the model fails to load,
-`analyze()` returns null and the pipeline runs on audio alone.
+**MediaPipe Face Landmarker** plays a supporting role: it locates/crops the face
+for ResNet and reads 52 ARKit blendshapes for expression cues (brow tension,
+squint, frown, cringe — the FER paper's negative-affect signals). Pixel
+heuristics add *sweat* (forehead specular highlights) and *eye-redness*
+(R/(G+B)).
+
+`tension = weighted sum (ResNet activity + expression + heuristics)`;
+`calmness = 1 − tension`. ResNet inference is async + throttled so it never
+blocks the per-second sampling loop; if a model fails to load the pipeline
+degrades gracefully (MediaPipe-only, or audio-only).
 
 ## Audio model — `web/src/lib/audioModel.ts`
 

@@ -65,7 +65,7 @@ export function StressRecordPage() {
         audioModel.current.load(),
       ]);
       const notes: string[] = [];
-      if (!faceOk) notes.push('face model unavailable');
+      notes.push(faceOk ? 'face: ResNet-50' : 'face model unavailable');
       notes.push(audioOk ? 'audio: YAMNet' : 'audio: DSP fallback');
       setModelNote(notes.join(' · '));
 
@@ -175,7 +175,7 @@ export function StressRecordPage() {
             <Signal label="Cringe" value={signals.cringe} />
             <Signal label="Sweat" value={signals.sweat} />
             <Signal label="Eye redness" value={signals.eyeRedness} />
-            <Signal label="Head motion" value={signals.headMotion} />
+            <Signal label="ResNet-50 activity" value={signals.resnetActivity} />
           </div>
           {!signals.faceVisible && <p className="muted" style={{ margin: 0 }}>No face detected.</p>}
           {audioEvent && <span className="pill demo" style={{ alignSelf: 'flex-start' }}>heard: {audioEvent.replace('_', ' ')}</span>}
@@ -196,8 +196,8 @@ export function StressRecordPage() {
       {phase === 'saving' && <button className="btn-full" disabled>Saving…</button>}
 
       <p className="muted center" style={{ fontSize: 13 }}>
-        Two on-device models run here — a face/expression model and a YAMNet audio
-        model. Nothing leaves your computer except the saved recording.
+        Two on-device models run here — Microsoft ResNet-50 for face analysis and a
+        YAMNet audio model. Nothing leaves your computer except the saved recording.
       </p>
     </AppShell>
   );
