@@ -16,7 +16,7 @@ actor ButterbaseClient {
 
     private(set) var lastStatus: SyncStatus = .idle
 
-    private let appID = "app_kf3crd1822g8"
+    private let appID = "app_whop1jqjf6do"
     private let host = URL(string: "https://api.butterbase.ai")!
     private let session: URLSession
     private let log = Logger(subsystem: "SomnAI", category: "Butterbase")
@@ -113,9 +113,12 @@ actor ButterbaseClient {
                     "users": [
                         "primary_key": ["id"],
                         "columns": [
-                            "id":         ["type": "text"],
-                            "email":      ["type": "text", "nullable": false],
-                            "created_at": ["type": "timestamptz", "default": "now()"]
+                            "id":            ["type": "text"],
+                            "email":         ["type": "text", "nullable": false],
+                            // Matches the web app's password auth (SHA-256 hash).
+                            // The phone leaves this null; web sign-in sets it.
+                            "password_hash": ["type": "text", "nullable": true],
+                            "created_at":    ["type": "timestamptz", "default": "now()"]
                         ]
                     ],
                     "sleep": [
