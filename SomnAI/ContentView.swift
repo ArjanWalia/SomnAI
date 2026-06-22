@@ -1,24 +1,22 @@
-//
-//  ContentView.swift
-//  SomnAI
-//
-//  Created by MANDEEP WALIA on 6/20/26.
-//
-
 import SwiftUI
 
 struct ContentView: View {
-    var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
-    }
-}
+    @State private var selection: Tab = .home
 
-#Preview {
-    ContentView()
+    enum Tab: Hashable { case home, stress, sleep }
+
+    var body: some View {
+        TabView(selection: $selection) {
+            HomeView()
+                .tabItem { Label("Home", systemImage: "house.fill") }
+                .tag(Tab.home)
+            StressView()
+                .tabItem { Label("Stress", systemImage: "brain.head.profile") }
+                .tag(Tab.stress)
+            SleepView()
+                .tabItem { Label("Sleep", systemImage: "moon.stars.fill") }
+                .tag(Tab.sleep)
+        }
+        .tint(Theme.accent)
+    }
 }
