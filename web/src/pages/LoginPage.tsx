@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
+import { provisionSchema, testConnection } from '../lib/butterbase';
 import { isButterbaseConfigured } from '../lib/config';
 
 export function LoginPage() {
@@ -13,11 +14,31 @@ export function LoginPage() {
   const [localError, setLocalError] = useState<string | null>(null);
   const [tokenDraft, setTokenDraft] = useState(butterbaseToken);
   const [tokenSaved, setTokenSaved] = useState(false);
+  const [bbBusy, setBbBusy] = useState<'tables' | 'test' | null>(null);
+  const [bbResult, setBbResult] = useState<string | null>(null);
   const live = isButterbaseConfigured();
 
   const saveToken = () => {
     setButterbaseToken(tokenDraft);
     setTokenSaved(true);
+  };
+
+  const createTables = async () => {
+    setButterbaseToken(tokenDraft);
+    setBbBusy('tables');
+    setBbResult(null);
+    const r = await provisionSchema();
+    setBbResult(r.message);
+    setBbBusy(null);
+  };
+
+  const testConn = async () => {
+    setButterbaseToken(tokenDraft);
+    setBbBusy('test');
+    setBbResult(null);
+    const r = await testConnection();
+    setBbResult(r.message);
+    setBbBusy(null);
   };
 
   const submit = (e: React.FormEvent) => {
@@ -142,6 +163,18 @@ export function LoginPage() {
           <button className="btn-full" type="button" onClick={saveToken}>
             {tokenSaved ? 'Saved ✓' : 'Save & connect'}
           </button>
+          <div className="btn-row">
+            <button className="btn-full" type="button" onClick={createTables} disabled={bbBusy != null}>
+              {bbBusy === 'tables' ? 'Creating…' : 'Create tables'}
+            </button>
+            <button className="btn-full" type="button" onClick={testConn} disabled={bbBusy != null}>
+              {bbBusy === 'test' ? 'Testing…' : 'Test connection'}
+            </button>
+          </div>
+          <p className="muted" style={{ margin: 0, fontSize: 12 }}>
+            First run: paste your key → <strong>Create tables</strong> → then sign up.
+          </p>
+          {bbResult && <p className="muted" style={{ margin: 0, fontSize: 13 }}>{bbResult}</p>}
         </details>
       </main>
     </div>
