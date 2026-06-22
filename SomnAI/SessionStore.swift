@@ -10,6 +10,8 @@ final class SessionStore {
 
     private(set) var sleepSessions: [SleepSession] = []
     private(set) var stressSessions: [StressSession] = []
+    var lastSyncError: String?
+    var lastSyncOK: Date?
 
     private let sleepURL: URL
     private let stressURL: URL
@@ -45,11 +47,24 @@ final class SessionStore {
         sleepSessions.insert(session, at: 0)
         persist()
         guard let email else { return }
-        Task.detached {
-            try? await ButterbaseClient.shared.putSleep(session, email: email)
-            if let url = session.audioFileName.flatMap({ Self.audioURL(for: $0) }),
-               let audioID = session.audioFileName {
-                try? await ButterbaseClient.shared.uploadAudio(fileURL: url, audioID: audioID)
+        Task {
+            var toUpload = session
+            if let name = session.audioFileName {
+                let url = Self.audioURL(for: name)
+                do {
+                    if let objectId = try await ButterbaseClient.shared.uploadAudio(fileURL: url) {
+                        toUpload.audioFileName = objectId
+                    }
+                } catch {
+                    self.lastSyncError = "Audio upload failed: \(error.localizedDescription)"
+                }
+            }
+            do {
+                try await ButterbaseClient.shared.putSleep(toUpload, email: email)
+                self.lastSyncOK = Date()
+                self.lastSyncError = nil
+            } catch {
+                self.lastSyncError = "Sleep sync failed: \(error.localizedDescription)"
             }
         }
     }
@@ -58,15 +73,21 @@ final class SessionStore {
         stressSessions.insert(session, at: 0)
         persist()
         guard let email else { return }
-        Task.detached {
-            try? await ButterbaseClient.shared.putStress(session, email: email)
+        Task {
+            do {
+                try await ButterbaseClient.shared.putStress(session, email: email)
+                self.lastSyncOK = Date()
+                self.lastSyncError = nil
+            } catch {
+                self.lastSyncError = "Stress sync failed: \(error.localizedDescription)"
+            }
         }
     }
 
     var latestSleepScore: Double? { sleepSessions.first?.sleepScore }
     var latestStressScore: Double? { stressSessions.first?.stressScore }
 
-    static func audioURL(for fileName: String) -> URL {
+    nonisolated static func audioURL(for fileName: String) -> URL {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             .appendingPathComponent(fileName)
     }

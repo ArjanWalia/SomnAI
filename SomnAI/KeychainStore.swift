@@ -2,9 +2,9 @@ import Foundation
 import Security
 
 enum KeychainStore {
-    private static let service = "SomnAI"
+    nonisolated private static let service = "SomnAI"
 
-    static func set(_ value: String, for key: String) {
+    nonisolated static func set(_ value: String, for key: String) {
         let data = Data(value.utf8)
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
@@ -17,7 +17,7 @@ enum KeychainStore {
         SecItemAdd(add as CFDictionary, nil)
     }
 
-    static func get(_ key: String) -> String? {
+    nonisolated static func get(_ key: String) -> String? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -32,7 +32,7 @@ enum KeychainStore {
         return str
     }
 
-    static func remove(_ key: String) {
+    nonisolated static func remove(_ key: String) {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -42,7 +42,8 @@ enum KeychainStore {
     }
 }
 
-enum SecretKey {
+nonisolated enum SecretKey {
     static let claudeAPI = "claude_api_key"
     static let userEmail = "user_email"
+    static let butterbaseToken = "butterbase_token"
 }

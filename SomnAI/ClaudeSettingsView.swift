@@ -7,6 +7,7 @@ struct ClaudeSettingsView: View {
     @State private var butterbaseToken: String = KeychainStore.get(SecretKey.butterbaseToken) ?? ""
     @State private var testResult: String?
     @State private var testing = false
+    @State private var provisioning = false
 
     var body: some View {
         NavigationStack {
@@ -84,8 +85,23 @@ struct ClaudeSettingsView: View {
                 }
                 .buttonStyle(.glassProminent)
                 .tint(Theme.sleep)
-                .disabled(testing)
-                Spacer()
+                .disabled(testing || provisioning)
+
+                Button {
+                    Task { await runProvision() }
+                } label: {
+                    HStack(spacing: 6) {
+                        if provisioning {
+                            ProgressView().controlSize(.small).tint(.white)
+                        } else {
+                            Image(systemName: "cylinder.split.1x2.fill")
+                        }
+                        Text(provisioning ? "Creating…" : "Create tables")
+                    }
+                }
+                .buttonStyle(.glass)
+                .tint(Theme.accent)
+                .disabled(testing || provisioning)
             }
             .padding(.top, 4)
 
@@ -132,10 +148,16 @@ struct ClaudeSettingsView: View {
     }
 
     private func runTest() async {
-        // Save token first so the client uses the latest value.
         KeychainStore.set(butterbaseToken, for: SecretKey.butterbaseToken)
         testing = true
         defer { testing = false }
         testResult = await ButterbaseClient.shared.testConnection()
+    }
+
+    private func runProvision() async {
+        KeychainStore.set(butterbaseToken, for: SecretKey.butterbaseToken)
+        provisioning = true
+        defer { provisioning = false }
+        testResult = await ButterbaseClient.shared.provisionSchema()
     }
 }

@@ -32,12 +32,14 @@ final class SleepRecorder {
         do {
             try configureAudioSession()
             try startEngine()
-            sessionStart = Date()
-            chunkStart = sessionStart
+            let now = Date()
+            sessionStart = now
+            chunkStart = now
             labels.removeAll()
             elapsed = 0
             state = .recording
             startTimer()
+            SleepActivityController.shared.start(at: now)
         } catch {
             state = .error(error.localizedDescription)
         }
@@ -60,6 +62,7 @@ final class SleepRecorder {
 
         fileWriter = nil
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        SleepActivityController.shared.end()
         state = .finished
     }
 
@@ -84,7 +87,7 @@ final class SleepRecorder {
 
     private func configureAudioSession() throws {
         let s = AVAudioSession.sharedInstance()
-        try s.setCategory(.playAndRecord, mode: .measurement, options: [.allowBluetooth, .mixWithOthers])
+        try s.setCategory(.playAndRecord, mode: .measurement, options: [.allowBluetoothHFP, .mixWithOthers])
         try s.setActive(true)
     }
 
@@ -160,6 +163,14 @@ final class SleepRecorder {
         let label = SleepLabel(kind: kind, start: start, duration: duration)
         await MainActor.run {
             self.labels.append(label)
+            if let started = self.sessionStart {
+                SleepActivityController.shared.update(
+                    snoring: self.labels.filter { $0.kind == .snoring }.count,
+                    hypopnea: self.labels.filter { $0.kind == .hypopnea }.count,
+                    obstructive: self.labels.filter { $0.kind == .obstructiveApnea }.count,
+                    startedAt: started
+                )
+            }
         }
     }
 }

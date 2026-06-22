@@ -55,12 +55,12 @@ struct MockSleepClassifier: SleepClassifier {
 
 // 10-second PCM chunk → mel-spectrogram via Accelerate (vDSP FFT + mel filterbank).
 enum MelSpectrogram {
-    static let sampleRate: Double = 16_000
-    static let windowSize = 1024
-    static let hopSize = 512
-    static let melBands = 64
+    nonisolated static let sampleRate: Double = 16_000
+    nonisolated static let windowSize = 1024
+    nonisolated static let hopSize = 512
+    nonisolated static let melBands = 64
 
-    static func compute(pcm: [Float]) -> [[Float]] {
+    nonisolated static func compute(pcm: [Float]) -> [[Float]] {
         guard pcm.count >= windowSize else { return [] }
         var hann = [Float](repeating: 0, count: windowSize)
         vDSP_hann_window(&hann, vDSP_Length(windowSize), Int32(vDSP_HANN_NORM))
@@ -70,28 +70,31 @@ enum MelSpectrogram {
         defer { vDSP_destroy_fftsetup(fft) }
 
         let filterbank = melFilterbank(nFFT: windowSize, melBands: melBands, sampleRate: sampleRate)
+        let halfSize = windowSize / 2
 
         var frames: [[Float]] = []
+        var real = [Float](repeating: 0, count: halfSize)
+        var imag = [Float](repeating: 0, count: halfSize)
+        var magnitudes = [Float](repeating: 0, count: halfSize)
+        var windowed = [Float](repeating: 0, count: windowSize)
+
         var i = 0
         while i + windowSize <= pcm.count {
-            var windowed = [Float](repeating: 0, count: windowSize)
-            vDSP_vmul(Array(pcm[i..<i+windowSize]), 1, hann, 1, &windowed, 1, vDSP_Length(windowSize))
+            let slice = Array(pcm[i..<i+windowSize])
+            vDSP_vmul(slice, 1, hann, 1, &windowed, 1, vDSP_Length(windowSize))
 
-            var real = [Float](repeating: 0, count: windowSize/2)
-            var imag = [Float](repeating: 0, count: windowSize/2)
-            var split = DSPSplitComplex(realp: &real, imagp: &imag)
-
-            windowed.withUnsafeBytes { ptr in
-                let cmplx = ptr.bindMemory(to: DSPComplex.self).baseAddress!
-                vDSP_ctoz(cmplx, 2, &split, 1, vDSP_Length(windowSize/2))
+            real.withUnsafeMutableBufferPointer { realPtr in
+                imag.withUnsafeMutableBufferPointer { imagPtr in
+                    var split = DSPSplitComplex(realp: realPtr.baseAddress!, imagp: imagPtr.baseAddress!)
+                    windowed.withUnsafeBytes { raw in
+                        let cmplx = raw.bindMemory(to: DSPComplex.self).baseAddress!
+                        vDSP_ctoz(cmplx, 2, &split, 1, vDSP_Length(halfSize))
+                    }
+                    vDSP_fft_zrip(fft, &split, 1, log2n, FFTDirection(FFT_FORWARD))
+                    vDSP_zvmags(&split, 1, &magnitudes, 1, vDSP_Length(halfSize))
+                }
             }
 
-            vDSP_fft_zrip(fft, &split, 1, log2n, FFTDirection(FFT_FORWARD))
-
-            var magnitudes = [Float](repeating: 0, count: windowSize/2)
-            vDSP_zvmags(&split, 1, &magnitudes, 1, vDSP_Length(windowSize/2))
-
-            // Apply mel filterbank
             var melFrame = [Float](repeating: 0, count: melBands)
             for b in 0..<melBands {
                 let row = filterbank[b]
@@ -106,7 +109,7 @@ enum MelSpectrogram {
         return frames
     }
 
-    private static func melFilterbank(nFFT: Int, melBands: Int, sampleRate: Double) -> [[Float]] {
+    nonisolated private static func melFilterbank(nFFT: Int, melBands: Int, sampleRate: Double) -> [[Float]] {
         let fMin: Double = 0
         let fMax = sampleRate / 2
         let melMin = hzToMel(fMin)
@@ -132,6 +135,6 @@ enum MelSpectrogram {
         return bank
     }
 
-    private static func hzToMel(_ hz: Double) -> Double { 2595 * log10(1 + hz / 700) }
-    private static func melToHz(_ mel: Double) -> Double { 700 * (pow(10, mel / 2595) - 1) }
+    nonisolated private static func hzToMel(_ hz: Double) -> Double { 2595 * log10(1 + hz / 700) }
+    nonisolated private static func melToHz(_ mel: Double) -> Double { 700 * (pow(10, mel / 2595) - 1) }
 }

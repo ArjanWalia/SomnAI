@@ -6,14 +6,83 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		C358EB2E2FE6C243002FEA35 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C358EB2D2FE6C242002FEA35 /* WidgetKit.framework */; };
+		C358EB302FE6C243002FEA35 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C358EB2F2FE6C243002FEA35 /* SwiftUI.framework */; };
+		C358EB412FE6C249002FEA35 /* SomnAIWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C358EB2B2FE6C241002FEA35 /* SomnAIWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		C358EB3F2FE6C249002FEA35 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C358EAAF2FE6A20E002FEA35 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C358EB2A2FE6C241002FEA35;
+			remoteInfo = SomnAIWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		C358EB462FE6C249002FEA35 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				C358EB412FE6C249002FEA35 /* SomnAIWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		C358EAB72FE6A20F002FEA35 /* SomnAI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SomnAI.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C358EB2B2FE6C241002FEA35 /* SomnAIWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SomnAIWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		C358EB2D2FE6C242002FEA35 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		C358EB2F2FE6C243002FEA35 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		C358EB242FE6AE00002FEA35 /* Exceptions for "SomnAI" folder in "SomnAI" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = C358EAB62FE6A20F002FEA35 /* SomnAI */;
+		};
+		C358EB452FE6C249002FEA35 /* Exceptions for "SomnAIWidget" folder in "SomnAIWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = C358EB2A2FE6C241002FEA35 /* SomnAIWidgetExtension */;
+		};
+		C358EB4A2FE6C458002FEA35 /* Exceptions for "SomnAI" folder in "SomnAIWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				SleepLiveActivity.swift,
+			);
+			target = C358EB2A2FE6C241002FEA35 /* SomnAIWidgetExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		C358EAB92FE6A20F002FEA35 /* SomnAI */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C358EB242FE6AE00002FEA35 /* Exceptions for "SomnAI" folder in "SomnAI" target */,
+				C358EB4A2FE6C458002FEA35 /* Exceptions for "SomnAI" folder in "SomnAIWidgetExtension" target */,
+			);
 			path = SomnAI;
+			sourceTree = "<group>";
+		};
+		C358EB312FE6C243002FEA35 /* SomnAIWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C358EB452FE6C249002FEA35 /* Exceptions for "SomnAIWidget" folder in "SomnAIWidgetExtension" target */,
+			);
+			path = SomnAIWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -26,6 +95,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C358EB282FE6C241002FEA35 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C358EB302FE6C243002FEA35 /* SwiftUI.framework in Frameworks */,
+				C358EB2E2FE6C243002FEA35 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -33,6 +111,8 @@
 			isa = PBXGroup;
 			children = (
 				C358EAB92FE6A20F002FEA35 /* SomnAI */,
+				C358EB312FE6C243002FEA35 /* SomnAIWidget */,
+				C358EB2C2FE6C242002FEA35 /* Frameworks */,
 				C358EAB82FE6A20F002FEA35 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,8 +121,18 @@
 			isa = PBXGroup;
 			children = (
 				C358EAB72FE6A20F002FEA35 /* SomnAI.app */,
+				C358EB2B2FE6C241002FEA35 /* SomnAIWidgetExtension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		C358EB2C2FE6C242002FEA35 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				C358EB2D2FE6C242002FEA35 /* WidgetKit.framework */,
+				C358EB2F2FE6C243002FEA35 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -55,10 +145,12 @@
 				C358EAB32FE6A20F002FEA35 /* Sources */,
 				C358EAB42FE6A20F002FEA35 /* Frameworks */,
 				C358EAB52FE6A20F002FEA35 /* Resources */,
+				C358EB462FE6C249002FEA35 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				C358EB402FE6C249002FEA35 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				C358EAB92FE6A20F002FEA35 /* SomnAI */,
@@ -69,6 +161,28 @@
 			productName = SomnAI;
 			productReference = C358EAB72FE6A20F002FEA35 /* SomnAI.app */;
 			productType = "com.apple.product-type.application";
+		};
+		C358EB2A2FE6C241002FEA35 /* SomnAIWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C358EB422FE6C249002FEA35 /* Build configuration list for PBXNativeTarget "SomnAIWidgetExtension" */;
+			buildPhases = (
+				C358EB272FE6C241002FEA35 /* Sources */,
+				C358EB282FE6C241002FEA35 /* Frameworks */,
+				C358EB292FE6C241002FEA35 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				C358EB312FE6C243002FEA35 /* SomnAIWidget */,
+			);
+			name = SomnAIWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = SomnAIWidgetExtension;
+			productReference = C358EB2B2FE6C241002FEA35 /* SomnAIWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -81,6 +195,9 @@
 				LastUpgradeCheck = 2650;
 				TargetAttributes = {
 					C358EAB62FE6A20F002FEA35 = {
+						CreatedOnToolsVersion = 26.5;
+					};
+					C358EB2A2FE6C241002FEA35 = {
 						CreatedOnToolsVersion = 26.5;
 					};
 				};
@@ -100,12 +217,20 @@
 			projectRoot = "";
 			targets = (
 				C358EAB62FE6A20F002FEA35 /* SomnAI */,
+				C358EB2A2FE6C241002FEA35 /* SomnAIWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		C358EAB52FE6A20F002FEA35 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C358EB292FE6C241002FEA35 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +247,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C358EB272FE6C241002FEA35 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		C358EB402FE6C249002FEA35 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C358EB2A2FE6C241002FEA35 /* SomnAIWidgetExtension */;
+			targetProxy = C358EB3F2FE6C249002FEA35 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		C358EAC02FE6A211002FEA35 /* Debug */ = {
@@ -251,8 +391,11 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = BLM49TZFMX;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SomnAI/Info.plist;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "SomnAI uses the microphone to detect snoring, hypopnea, and obstructive apnea events.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -282,8 +425,11 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = BLM49TZFMX;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SomnAI/Info.plist;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "SomnAI uses the microphone to detect snoring, hypopnea, and obstructive apnea events.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -299,6 +445,66 @@
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		C358EB432FE6C249002FEA35 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = BLM49TZFMX;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SomnAIWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SomnAIWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = SomnAI.SomnAI.SomnAIWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C358EB442FE6C249002FEA35 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = BLM49TZFMX;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SomnAIWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SomnAIWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = SomnAI.SomnAI.SomnAIWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
@@ -323,6 +529,15 @@
 			buildConfigurations = (
 				C358EAC32FE6A211002FEA35 /* Debug */,
 				C358EAC42FE6A211002FEA35 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C358EB422FE6C249002FEA35 /* Build configuration list for PBXNativeTarget "SomnAIWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C358EB432FE6C249002FEA35 /* Debug */,
+				C358EB442FE6C249002FEA35 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -94,22 +94,124 @@ actor ButterbaseClient {
         (KeychainStore.get(SecretKey.butterbaseToken) ?? "").isEmpty == false
     }
 
-    /// Pings Butterbase to verify the token works. Returns a user-facing message.
+    // MARK: Schema provisioning
+
+    /// Creates the users / sleep / stress tables if they don't exist.
+    /// Reference: POST /v1/{app_id}/schema/apply
+    func provisionSchema() async -> String {
+        guard hasToken else {
+            record(.noToken)
+            return "No token set. Paste your Butterbase token above and tap Save."
+        }
+
+        // Column shape kept minimal: only `type`, `nullable`, `default`.
+        // Primary keys declared at table level via `primary_key` array.
+        let body: [String: Any] = [
+            "name": "SomnAI bootstrap",
+            "schema": [
+                "tables": [
+                    "users": [
+                        "primary_key": ["id"],
+                        "columns": [
+                            "id":         ["type": "text"],
+                            "email":      ["type": "text", "nullable": false],
+                            "created_at": ["type": "timestamptz", "default": "now()"]
+                        ]
+                    ],
+                    "sleep": [
+                        "primary_key": ["id"],
+                        "columns": [
+                            "id":                       ["type": "text"],
+                            "email":                    ["type": "text", "nullable": false],
+                            "date":                     ["type": "text"],
+                            "start_timestamp":          ["type": "timestamptz"],
+                            "end_timestamp":            ["type": "timestamptz"],
+                            "sleep_score":              ["type": "numeric"],
+                            "audio_id":                 ["type": "text", "nullable": true],
+                            "hypopnea_timestamps":      ["type": "jsonb"],
+                            "obstructive_timestamps":   ["type": "jsonb"],
+                            "snoring_timestamps":       ["type": "jsonb"]
+                        ]
+                    ],
+                    "stress": [
+                        "primary_key": ["id"],
+                        "columns": [
+                            "id":                   ["type": "text"],
+                            "email":                ["type": "text", "nullable": false],
+                            "date":                 ["type": "text"],
+                            "start_timestamp":      ["type": "timestamptz"],
+                            "end_timestamp":        ["type": "timestamptz"],
+                            "stress_score":         ["type": "numeric"],
+                            "video_id":             ["type": "text", "nullable": true],
+                            "audio_id":             ["type": "text", "nullable": true],
+                            "stressed_timestamps":  ["type": "jsonb"]
+                        ]
+                    ]
+                ]
+            ]
+        ]
+
+        do {
+            let data = try JSONSerialization.data(withJSONObject: body)
+            let url = host.appendingPathComponent("v1/\(appID)/schema/apply")
+            let req = try authedRequest(url, method: "POST", body: data)
+            _ = try await send(req)
+            record(.ok(at: Date()))
+            return "Schema applied. users, sleep, and stress tables are ready."
+        } catch let err as NSError where err.domain == "Butterbase" {
+            record(.failed(err.localizedDescription))
+            if err.code == 401 || err.code == 403 {
+                return "Token rejected. Use a service key (bb_sk_…) with admin permissions to apply schema."
+            }
+            return "Schema apply failed: \(err.localizedDescription)"
+        } catch {
+            record(.failed(error.localizedDescription))
+            return "Schema apply failed: \(error.localizedDescription)"
+        }
+    }
+
+    /// Pings each required table to verify token + schema. Returns a user-facing message.
     func testConnection() async -> String {
         guard hasToken else {
             record(.noToken)
             return "No token set. Paste your Butterbase token above and tap Save."
         }
-        do {
-            let req = try authedRequest(tableURL("users"), method: "GET")
-            _ = try await send(req)
-            record(.ok(at: Date()))
-            return "Connected. Users table is reachable."
-        } catch {
-            let msg = error.localizedDescription
-            record(.failed(msg))
-            return "Failed: \(msg)"
+
+        var missing: [String] = []
+        var unauthorized = false
+        var otherError: String?
+
+        for table in ["users", "sleep", "stress"] {
+            do {
+                let req = try authedRequest(tableURL(table), method: "GET")
+                _ = try await send(req)
+            } catch let err as NSError where err.domain == "Butterbase" {
+                switch err.code {
+                case 404: missing.append(table)
+                case 401, 403: unauthorized = true
+                default: otherError = err.localizedDescription
+                }
+            } catch {
+                otherError = error.localizedDescription
+            }
         }
+
+        if unauthorized {
+            record(.failed("Token rejected (401/403)"))
+            return "Token rejected. Check that it's a valid bb_sk_… service key or a user JWT, not expired."
+        }
+        if let otherError {
+            record(.failed(otherError))
+            return "Failed: \(otherError)"
+        }
+        if !missing.isEmpty {
+            let msg = "Missing tables: \(missing.joined(separator: ", "))"
+            record(.failed(msg))
+            return "Token works, but these tables don't exist in your Butterbase app yet: \(missing.joined(separator: ", ")). Create them in the Butterbase dashboard, then test again."
+        }
+
+        record(.ok(at: Date()))
+        return "Connected. All three tables (users, sleep, stress) are reachable."
     }
 
     // MARK: Users
